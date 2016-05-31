@@ -23,12 +23,12 @@ gps_Hz = 5  # gps update rate Hz
 
 # Expected files from a single ride
 logs = [
-    "calibration.csv",\
-    "cadence.csv",\
-    "front_brake.csv",\
-    "rear_brake.csv",\
-    "imu.csv",\
-    "steering.csv",\
+    "calibration.csv",
+    "cadence.csv",
+    "front_brake.csv",
+    "rear_brake.csv",
+    "imu.csv",
+    "steering.csv",
     "wheelspeed.csv"
 ]
 
