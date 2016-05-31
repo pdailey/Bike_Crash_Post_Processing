@@ -11,6 +11,8 @@ import fnmatch
 from pathlib import *
 import arrow
 
+# Set true to graph the data using R
+graphing = False
 # Expected files from a single ride
 logs = ["calibration.csv",         "cadence.csv",        "front_brake.csv",         "rear_brake.csv",         "imu.csv",         "steering.csv",         "wheelspeed.csv"]
 
@@ -288,25 +290,29 @@ map_route
 
 # # Create Plots using R
 
-# In[ ]:
+# In[10]:
 
 import subprocess
 
-rscript = p / "Plot_Ride_Data.R"
+if(graphing):
+    rscript = p / "Plot_Ride_Data.R"
 
-# make script executable. Uses octal form
-# representation. needs an integer, not a string. 0777 == 511.
-rscript.chmod(511)
+    # make script executable. Uses octal form
+    # representation. needs an integer, not a string. 0777 == 511.
+    rscript.chmod(511)
 
-# TODO - Set timeout?
-subprocess.run("./Plot_Ride_Data.R | R --vanilla | less", shell=True, check=True, timeout = 10)
+    print("\n\nGENERATING PLOTS IN R")
+    print('This may take a while...')
+
+
+    # TODO - Set timeout?
+    subprocess.run("./Plot_Ride_Data.R | R --vanilla | less", shell=True, check=True, timeout = 120)
+    print("Plots saved to R_Plots.pdf")
 
 
 # # Save the files to a Time-Stamped Directory
 
-# In[ ]:
-
-
+# In[11]:
 
 # Save the remaining files 
 print("\n\nSAVING FILES TO {}\n".format(save_path))
@@ -319,9 +325,4 @@ for file in os.listdir(str(temp_path)):
     print('\tSaved {0} --> {1}'.format(src.relative_to(p), dest.relative_to(p)))
 
 temp_path.rmdir()
-
-
-# In[ ]:
-
-
 
