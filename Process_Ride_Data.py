@@ -60,6 +60,7 @@ from fuzzywuzzy import process
 files = os.listdir(str(open_path))
 
 print("\n\nLOOKING FOR FILES IN:\n{}".format(open_path))
+print("\n MOVING TO:\n{}".format(temp_path))
 
 # Search a file that matches each log we are looking for
 for log in logs:
@@ -77,6 +78,7 @@ for log in logs:
 # Functions to parse the IMU/GPS strings
 
 # In[3]:
+
 
 '''Parses useful data from the GPS Position Packet and appends to a list
 The NMEA GPS pose packet contains GPS latitude, longitude, and 
@@ -246,9 +248,8 @@ print("\t{} packets processed. ".format(total))
 print("\t{} of these were corrupted or not identified".format(bad_packets))
 print("\t{:3.2f}% packets sucessfully identified and processed".format(percent_success))
 
-# # Extract position and rates from IMU
 
-# In[5]:
+# In[7]:
 
 import fnmatch
 import os
@@ -265,7 +266,7 @@ def saveFile(lst, file, dest):
             
 
 # Save extracted lists to data files
-print("Extracting GPS, acceleration, euler angles and angular rates from imu.csv")
+print("Extracting GPS, acceleration, euler angles and angular rates from parsed IMU packets")
 saveFile(lst_gps, "gps.csv", temp_path)
 saveFile(lst_angle, "angles.csv", temp_path)
 saveFile(lst_rate, "angular_rates.csv", temp_path)
@@ -273,11 +274,13 @@ saveFile(lst_gyro, "gyroscope.csv", temp_path)
 saveFile(lst_accel, "accelerometer.csv", temp_path)
 
 
+# # Extract position and rates from IMU
+
 # # Map the GPS Route
 # 
 # The GPS route is mapped using folium and output as an html file
 
-# In[7]:
+# In[8]:
 
 import pandas as pd
 
@@ -291,20 +294,33 @@ print('Loaded {0}'.format(src.relative_to(p)))
 # Show the data
 df.head(10)
 
+# Show A summary of the data
+#df.describe()
+#df.head(n=10)
+#df.dtypes
+
 
 # In[ ]:
+
+
+
+
+# In[9]:
 
 # Map route from GPS data
 import folium
 from tqdm import tqdm
 
-# Zero the time reported on the map
-df['time'] - df['time'][0]
+# Zero the sensor time, setting zero at when the tests began
+# TODO: Convert all times....Currently handled in R
+#df['time'] - df['time'][1]
+
 
 # map every nth lat/long point
 nth = 5
 print('Mapping every {}th point in a set of {}.'.format(nth, df.shape[0]))
-print('This may take a while for large data sets...'.format(nth))
+print('GPS is sampling at {0}Hz, {1}s between points.'.format(gps_Hz, time_period))
+print('This may take a while for large data sets...')
 
 # center the map
 start_pt = [df["lat"][0], df["long"][0]]
