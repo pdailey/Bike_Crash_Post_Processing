@@ -87,25 +87,18 @@ Packet Format:
 $PCHRG,time,latitude,longitude,altitude,roll,pitch,yaw,heading,*checksum
 '''
 def parsePositionString(p):
-    if(len(p) >= 8):
+    if(len(p) > 6):
         # GPS was running, avoid null island. 
         if(p[2] != "0.000000"): 
-            gps = ""
             # time, lat, long
-            gps += p[1] + ", "
-            # [lat, long]
-            gps += p[2] + ", " + p[3]
-            lst_gps.append(gps)
-            
-            angle = ""
-            # [time, pitch angle, roll angle, yaw angle]
-            angle = p[1] +", "+ p[5] +", "+ p[6] + ", "+ p[7]
-            lst_angle.append(angle)
+            s = p[1] + ", " + p[2] + ", " + p[3]
+            lst_gps.append(s)
+         
+        # time, pitch angle, roll angle, yaw angle
+        s = p[1] +", "+ p[5] +", "+ p[6] + ", "+ p[7]
+        lst_angle.append(s)
              
-            
-
-            
-            
+               
 ''' Parses useful data from the Rate Packet and appends to a list
 The NMEA rate packet contains angular rates and GPS velocities measured 
 by the sensor, if GPS is present.
@@ -114,14 +107,18 @@ Packet Format:
 $PCHRR,time,vn,ve,vup,roll_rate,pitch_rate,yaw_rate,*checksum
 '''
 def parseRateString(p):
-    if(len(p) >= 8):
-        rate = ""
-        # time
-        rate += p[1] + ", "
-        # [pitch rate, roll rate, yaw rate]
-        rate += p[5] + ", " + p[6] + ", " + p[7] 
-        lst_rate.append(rate)
+    if(len(p) > 6):
+        # GPS Velocity
+        # time, north velocity, east velocity
+        s = p[1] + ", " + p[2] + ", " + p[3]
+        lst_gps_vel.append(s)
+        
+        # Rates: pitch roll and yaw
+        # time, pitch rate, roll rate, yaw rate
+        s = p[1] + ", " + p[5] + ", " + p[6] + ", " + p[7] 
+        lst_rate.append(s)
  
+
 '''Parses useful data from the Sensor Packet and appends to a list
 The NMEA sensor packet contains gyro, accelerometer, and magnetometer 
 data measured by the sensor.
@@ -129,24 +126,33 @@ data measured by the sensor.
 Packet Format:
 $PCHRS,count,time,sensor_x,sensor_y,sensor_z,*checksum
 '''
-def parseSensorString(p):  
-    if(len(p) == 7):
-        rate = ""
-        # time
-        rate += p[2] + ", "
-        # [sensor x, y, z]
-        rate += p[3] + ", " + p[4] + ", " + p[5] 
-        
+def parseSensorString(p): 
+    if(len(p) > 4):
+        # time, sensor x, sensor y, sensor z
+        s = p[2] + ", " + p[3] + ", " + p[4] + ", " + p[5] 
+
         # Save to proper file. Magnotometer data is discarded
         sensor = int(p[1])   
         if(sensor == 0):
-            lst_gyro.append(rate)
+            lst_gyro.append(s)
         elif(sensor == 1):
-            lst_accel.append(rate)
+            lst_accel.append(s)
             
+''' Parses useful data from the Health Packet and appends to a list.
+The NMEA health packet contains a summary of health-related information, 
+including basic GPS information and sensor status information.
 
 
-# # Process the IMU/GPS File
+Packet Format:
+$PCHRH,time,sats_used,sats_in_view,HDOP,mode,COM,accel,gyro,mag,GPS,res,res,res,*checks um
+'''
+def parseHealthString(p):
+    return False
+    #TODO, left for compatibility
+
+
+# # Checksum
+# Filter bad data.
 
 # In[4]:
 
