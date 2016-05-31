@@ -29,7 +29,6 @@ setwd( dir)
 # Acceleration
 ########################################################################
 df_accel = read.csv("accelerometer.csv", header = T)
-df_accel$time <- (df_accel$time - df_accel$time[1])
 m_accel <-  melt(df_accel, id = "time")
 
 plot <- ggplot(data = m_accel, aes( x = time, y = value, group = variable, colour = variable)) +
@@ -58,7 +57,6 @@ ggsave(plot, file = "Acceleration_Smooth.png", width = 8, height = 6)
 # Gyro
 ########################################################################
 df_gyro = read.csv("gyroscope.csv", header = T)
-df_gyro$time <- (df_gyro$time - df_gyro$time[1])
 m_gyro <-  melt(df_gyro, id = "time")
 
 plot <- ggplot(data = m_gyro, aes( x = time, y = value, group = variable, colour = variable)) +
@@ -83,15 +81,11 @@ plot = plot + scale_color_manual(values = c("#01665e", "#5ab4ac", "#2b8cbe", "#2
 plot
 ggsave(plot, file = "Gyroscope_Smooth.png", width = 8, height = 6)
 
-
 ########################################################################
 # Euler Angles and Rates
 ########################################################################
-
 df_position = read.csv("angles.csv", header = T)
 df_angular_rates = read.csv("angular_rates.csv", header = T)
-df_position$time <- (df_position$time - df_position$time[1])
-df_angular_rates$time <- (df_angular_rates$time - df_angular_rates$time[1])
 
 m_position <-  melt(df_position, id = "time")
 m_angular_rates <- melt(df_angular_rates, id = "time")
@@ -148,10 +142,6 @@ df_rear_brake = read.csv("rear_brake.csv", header = T)
 
 # CALIBRATION
 df_c = read.csv("calibration.csv", header = T)
-
-## Convert system time to time zero and convert from seconds to ms
-df_front_brake$Time <- (df_front_brake$Time - df_front_brake$Time[1]) / 1000
-df_rear_brake$Time <- (df_rear_brake$Time - df_rear_brake$Time[1]) / 1000
 
 ## Convert the brake engagement to a percentage
 df_front_brake$Flex.Sensor.Reading = 100 - 100 * ((df_c$Front.Engaged - df_front_brake$Flex.Sensor.Reading) / (df_c$Front.Engaged - df_c$Front.Disengaged))
@@ -212,9 +202,6 @@ df_steering = read.csv("steering.csv", header = T)
 # CALIBRATION
 df_c = read.csv("calibration.csv", header = T)
 
-# Convert system time to time zero and convert from seconds to ms
-df_steering$Time <- (df_steering$Time - df_steering$Time[1]) / 1000
-
 ## Convert the steering measurement to an angle
 df_steering$Steering.Reading <- -90 + 180 * (df_c$Steering.Left - df_steering$Steering.Reading) / (df_c$Steering.Left - df_c$Steering.Right)
 
@@ -240,7 +227,6 @@ ggsave(plot, file = "Steering Angle.png", width = 8, height = 6)
 # wheelspeed
 ########################################################################
 df_wheel = read.csv("wheelspeed.csv", header = T)
-df_wheel$Time <- (df_wheel$Time - df_wheel$Time[1]) / 1000
 
 # Convert wheel RPM to m/s
 # TODO: m/s, convert all wheel sizes to mm for this calculation
@@ -266,8 +252,6 @@ ggsave(plot, file = "Wheelspeed.png", width = 8, height = 6)
 # cadence
 ########################################################################
 df_cadence = read.csv("cadence.csv", header = T)
-df_cadence$Time <- (df_cadence$Time - df_cadence$Time[1]) / 1000
-
 m_cadence <- melt(df_cadence, id = "Time")
 
 plot <- ggplot(data = m_cadence, aes( x = Time, y = value, group = variable, colour = variable))  +
