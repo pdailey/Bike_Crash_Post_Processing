@@ -13,6 +13,11 @@ import arrow
 
 # Set true to graph the data using R
 graphing = False
+
+# Set the the packet rates
+pkt_Hz = 20 #position packet update rate Hz
+gps_Hz = 5  #gps update rate Hz
+
 # Expected files from a single ride
 logs = ["calibration.csv",         "cadence.csv",        "front_brake.csv",         "rear_brake.csv",         "imu.csv",         "steering.csv",         "wheelspeed.csv"]
 
@@ -291,8 +296,10 @@ src = temp_path / 'gps.csv'
 df = pd.read_csv(str(src), index_col=None)
 print('Loaded {0}'.format(src.relative_to(p)))
 
-# Show the data
-df.head(10)
+df.apply(lambda x: pd.to_numeric(x, errors='coerce'))
+
+# Convert time from a string
+df['time'] = df['time'].convert_objects(convert_numeric=True)
 
 # Show A summary of the data
 #df.describe()
@@ -315,9 +322,13 @@ from tqdm import tqdm
 # TODO: Convert all times....Currently handled in R
 #df['time'] - df['time'][1]
 
+# remove intervals between gps updates
+df = df[::int(pkt_Hz/gps_Hz)]
 
 # map every nth lat/long point
-nth = 5
+time_period = 3 # seconds
+nth = time_period * gps_Hz
+
 print('Mapping every {}th point in a set of {}.'.format(nth, df.shape[0]))
 print('GPS is sampling at {0}Hz, {1}s between points.'.format(gps_Hz, time_period))
 print('This may take a while for large data sets...')
