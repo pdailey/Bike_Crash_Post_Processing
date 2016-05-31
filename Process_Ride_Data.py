@@ -19,9 +19,9 @@ logs = ["calibration.csv",         "cadence.csv",        "front_brake.csv",     
 # Directories to organize data
 p = Path('.').resolve()
 
-open_dir = 'Unprocessed_Data'
-save_dir = 'Processed_Data'
-temp_dir = 'temp'
+open_dir = '_Unprocessed_Data'
+save_dir = '_Processed_Data'
+temp_dir = '_temp'
 
 # Set Default Datetime to name folder where logs are stored
 now = arrow.utcnow().to("US/Pacific")
@@ -60,7 +60,6 @@ from fuzzywuzzy import process
 files = os.listdir(str(open_path))
 
 print("\n\nLOOKING FOR FILES IN:\n{}".format(open_path))
-print("Moving to {}".format(temp_path))
 
 # Search a file that matches each log we are looking for
 for log in logs:
