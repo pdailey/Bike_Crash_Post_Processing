@@ -155,6 +155,35 @@ def parseHealthString(p):
 
 # In[4]:
 
+def validChecksum(st):
+    try:
+        # Split the string into the data and the checksum
+        packet, checksum = st.split(",*")
+        
+        # convert to hex for XOR comparison
+        checksum = int(checksum, 16)
+        
+        # Remove leading $ symbol and commas
+        packet = packet[1:].replace(',', '')
+        
+        # perform checksum XOR
+        packet_sum = 0
+        for char in packet:
+            packet_sum ^= ord(char)
+
+        if(packet_sum == checksum):
+            return True
+        else:
+            return False
+    
+    except:
+        return False
+
+
+# # Process the IMU/GPS File
+
+# In[5]:
+
 import csv
 import re
 import fileinput
@@ -167,47 +196,55 @@ lst_gyro = []
 lst_gps = []
 lst_angle = []
 lst_rate = []
+lst_gps_vel = []
 lst_accel.append("time,x_accel,y_accel,z_accel")
 lst_gyro.append("time,x_gyro,y_gyro,z_gyro")
 lst_gps.append("time,lat,long")
 lst_angle.append("time,pitch_angle,roll_angle,yaw_angle")
 lst_rate.append("time,pitch_rate,roll_rate,yaw_rate")
+lst_gps_vel.append("time,vel_east,vel_west")
 
-print("\n\nPROCESSING IMU")
-# Search for $ character that denotes NMEA sentences in a given csv file. 
-# Does not filter data after the checksum, as correct NMEA 
-# sentences end with a newline chracter
+print("\n\nPROCESSING IMU PACKETS")
+
 imu_file = str(temp_path) + "/" + logs[4]
 
-# Currently the IMU data is a little scrambled. Fixed with the following hack...
-for line in fileinput.input(imu_file, inplace=True):
-    # inside this loop the STDOUT will be redirected to the file
-    # the comma after each print statement is needed to avoid double line breaks
-    print(line.replace("$", "\n$"),)
-    
+strings = [line.rstrip('\n') for line in open(imu_file)]
 
-# Get a list of strings to parse
-strings = [re.findall(r'[A-Z]{5}\S*', line) for line in open(imu_file)]
 
-# We only care about non-empty strings
-strings = filter(None, strings)
-  
+# In[6]:
+
 print("Parsing IMU Packets...")
 # Filter lines by NMEA type
+bad_packets = 0
+total = 0
 for string in tqdm(strings):
-    # Seperate into parsable data
-    string = [x.strip() for x in string[0].split(',')] 
+    total += 1
     
-    # Switch Statement to handle different data packets
-    if(string[0] == "PCHRG"):
-        parsePositionString(string)
-    elif(string[0] == "PCHRR"):
-        parseRateString(string)
-    elif(string[0] == "PCHRS"):
-        parseSensorString(string)      
+    if(validChecksum(string)):
+        # Seperate into a list to parse
+        string = [x.strip() for x in string.split(',')] 
         
-print("Done.")
+        # Switch Statement to handle different data packets
+        if(string[0] == "$PCHRG"):
+            parsePositionString(string)
+        elif(string[0] == "$PCHRR"):
+            parseRateString(string)
+        elif(string[0] == "$PCHRS"):
+            parseSensorString(string) 
+        elif(string[0] == "$PCHRH"):
+            parseHealthString(string) 
+        else:
+            bad_packets += 1
+    else:
+        bad_packets += 1
 
+        
+percent_success = 100 * (1 - bad_packets/total)
+        
+print("\RESULTS:")
+print("\t{} packets processed. ".format(total))
+print("\t{} of these were corrupted or not identified".format(bad_packets))
+print("\t{:3.2f}% packets sucessfully identified and processed".format(percent_success))
 
 # # Extract position and rates from IMU
 
