@@ -21,9 +21,9 @@ library(plyr)
 # Set Working Directory
 #########################################################################
 d1 = getwd()
-d2 = "/temp"
+d2 = "/_temp"
 dir = paste(d1, d2, sep = "")
-setwd( dir)
+setwd(dir)
 
 ########################################################################
 # Acceleration
