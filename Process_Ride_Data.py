@@ -1,4 +1,3 @@
-# Import Libraries
 import os
 import csv
 import pandas as pd
@@ -12,100 +11,16 @@ import folium
 from tqdm import tqdm
 import subprocess
 
-# # Open Files
-# Open the files for processing. Create a save directory using the timestamp from the calibration CSV.
-# Set true to graph the data using R
-graphing = False
 
-# Set the the packet rates
-pkt_Hz = 20  # position packet update rate Hz
-gps_Hz = 5  # gps update rate Hz
+'''
+Validate Checksum
 
-# Expected files from a single ride
-logs = [
-    "calibration.csv",
-    "cadence.csv",
-    "front_brake.csv",
-    "rear_brake.csv",
-    "imu.csv",
-    "steering.csv",
-    "wheelspeed.csv"
-]
+Count of the number of bits in a packet that is included with the packet
+to check whether the same number of bits arrived. If the counts match,
+it's assumed that the complete transmission was received and the data is
+valid.
+'''
 
-# Set Default Datetime to name folder where logs are stored
-now = arrow.utcnow().to("US/Pacific")
-now = str(now.format('MM.DD.YYYY@HH.mm'))
-
-# Directories to organize data
-p = Path('.').resolve()
-open_dir = '_Unprocessed_Data'
-save_dir = '_Processed_Data'
-temp_dir = '_temp'
-
-# Create Paths
-open_path = p / open_dir
-temp_path = p / temp_dir
-save_path = p / save_dir / now
-
-print("BEGIN PROCESSING DATA")
-print("Data processed on {} at {}".format(now))
-
-# Throw error if the temp/save directories already exist.
-temp_path.mkdir(exist_ok=False)
-save_path.mkdir(exist_ok=False)
-
-#print("Processed files will be saved to: \n{}" .format(save_path))
-
-
-# Find the files to process
-# Use fuzzy searching to robustly find the logs to process in the open
-# folder (members of the team have difficulty naming things consistently).
-# Fuzzy search implements the Levenshtein distance algorithm.
-files = os.listdir(str(open_path))
-
-print("\n\nLOOKING FOR FILES IN:\n{}".format(open_path))
-print("\n MOVING TO:\n{}".format(temp_path))
-
-# Search a file that matches each log we are looking for
-for log in logs:
-    print("\t{}...".format(log))
-    # find the top match
-    file = process.extractOne(log, files)
-    src = open_path / file[0]
-    dest = temp_path / log
-    os.rename(str(src), str(dest))
-    print('\t{0:3d}% match. Rename {2} --> {1}'.format(file[1], log, file[0]))
-
-
-# # Convert BBB Time
-# The BBB stores the time the testing started in calibration.csv. This
-# time is not correct, at the BBB does not have an RTC installed
-# currently. Instead, the times are converted to seconds since
-# calibration, and converted from ms to s.
-
-# get the start time from the calibration routine
-src = temp_path / logs[0]
-df = pd.read_csv(src, index_col=None)
-t_0 = df["Time Zero"][0]
-print("Calibrating the time for the following files...")
-
-for log in logs:
-    # Skip calibration and imu. calibration is not a log file,
-    # imu it is on an arduino with a an independent system time.
-    if(log != "calibration.csv" and log != "imu.csv"):
-        print("\t{}".format(log))
-        csv = temp_path / log
-        df = pd.read_csv(csv, index_col=None)
-        # get delta t, and convert from ms to s
-        df["Time"] = (df["Time"] - t_0) / 1000
-        df.to_csv(str(csv), index_col=None)
-
-
-# # Checksum
-# Count of the number of bits in a packet that is included with the packet
-# to check whether the same number of bits arrived. If the counts match,
-# it's assumed that the complete transmission was received and the data is
-# valid.
 
 def validChecksum(st):
     try:
@@ -125,11 +40,6 @@ def validChecksum(st):
             return False
     except:
         return False
-
-
-# # Parse IMU/GPS Strings
-# Functions to parse the IMU/GPS strings. Refer to the IMU/UM7 Datacheet
-# for more information on packet structure.
 
 '''Parses useful data from the GPS Position Packet and appends to a list
 The NMEA GPS pose packet contains GPS latitude, longitude, and
@@ -152,7 +62,6 @@ def parsePositionString(p, time_zero):
         # time, pitch angle, roll angle, yaw angle
         s = str(p[1]) + ", " + p[5] + ", " + p[6] + ", " + p[7]
         lst_angle.append(s)
-
 
 ''' Parses useful data from the Rate Packet and appends to a list
 The NMEA rate packet contains angular rates and GPS velocities measured
@@ -205,7 +114,6 @@ def parseSensorString(p, time_zero):
 The NMEA health packet contains a summary of health-related information,
 including basic GPS information and sensor status information.
 
-
 Packet Format:
 $PCHRH,time,sats_used,sats_in_view,HDOP,mode,COM,accel,gyro,mag,GPS,res,res,res,*checks um
 '''
@@ -216,9 +124,121 @@ def parseHealthString(p, time_zero):
     # TODO, left for compatibility
 
 
-# # Process the IMU/GPS File
-# List of data that will be seperated into seperate CSV files
-# Initial entries are headers.
+'''
+Saves a list to a file in a given directory
+'''
+
+
+def saveListToFile(lst, file, dest):
+    with open(file, "w") as f:
+        for line in lst:
+            f.write("%s\n" % line)
+    dest = dest / file
+    os.rename(file, str(dest))
+    print('\tSaved {0} --> {1}'.format(file, dest.relative_to(p)))
+
+
+'''
+User Defined Variables
+'''
+# Set true to graph the data using R
+graphing = False
+
+# Set the the packet rates
+pkt_Hz = 20  # position packet update rate Hz
+gps_Hz = 5  # gps update rate Hz
+
+
+'''
+Open Files
+Open the files for processing. Create a save directory using the time the data was processed
+'''
+
+# Expected files from a single ride
+logs = [
+    "calibration.csv",
+    "cadence.csv",
+    "front_brake.csv",
+    "rear_brake.csv",
+    "imu.csv",
+    "steering.csv",
+    "wheelspeed.csv"
+]
+
+# Set Default Datetime to name folder where logs are stored
+now = arrow.utcnow().to("US/Pacific")
+now = str(now.format('MM.DD.YYYY@HH.mm'))
+
+# Directories
+p = Path('.').resolve()
+open_dir = '_Unprocessed_Data'
+save_dir = '_Processed_Data'
+temp_dir = '_temp'
+
+# Paths
+open_path = p / open_dir
+temp_path = p / temp_dir
+save_path = p / save_dir / now
+
+print("BEGIN PROCESSING DATA")
+print("Data processed on {}".format(now))
+print("Processed files will be saved to: \n{}" .format(save_path))
+
+# Throw error if the temp/save directories already exist.
+temp_path.mkdir(exist_ok=False)
+save_path.mkdir(exist_ok=False)
+
+'''
+Find the files to process
+Use fuzzy searching to robustly find the logs to process in the open
+folder (members of the team have difficulty naming things consistently).
+Fuzzy search implements the Levenshtein distance algorithm.
+'''
+files = os.listdir(str(open_path))
+
+print("\n\nLOOKING FOR FILES IN:\n{}".format(open_path))
+print("\n MOVING TO:\n{}".format(temp_path))
+
+# Search a file that matches each log we are looking for
+for log in logs:
+    print("\t{}...".format(log))
+    # find the top match
+    file = process.extractOne(log, files)
+    src = open_path / file[0]
+    dest = temp_path / log
+    os.rename(str(src), str(dest))
+    print('\t{0:3d}% match. Rename {2} --> {1}'.format(file[1], log, file[0]))
+
+'''
+Convert BBB Time
+The BBB stores the time the testing started in calibration.csv. This
+time is not correct, at the BBB does not have an RTC installed
+currently. Instead, the times are converted to seconds since
+calibration, and converted from ms to s.
+'''
+
+# get the start time from the calibration routine
+src = temp_path / logs[0]
+df = pd.read_csv(src, index_col=None)
+t_0 = df["Time Zero"][0]
+print("Calibrating the time for the following files...")
+
+for log in logs:
+    # Skip calibration and imu. Calibration is not a log file,
+    # imu it is on an arduino with a an independent system time.
+    if(log != "calibration.csv" and log != "imu.csv"):
+        print("\t{}".format(log))
+        csv = temp_path / log
+        df = pd.read_csv(csv, index_col=None)
+        # get delta t, and convert from ms to s
+        df["Time"] = (df["Time"] - t_0) / 1000
+        df.to_csv(str(csv), index_col=None)
+
+
+'''
+Process the IMU/GPS File
+'''
+# List of data that will be separated into separate CSV files.
 lst_accel = []
 lst_accel.append("time,x_accel,y_accel,z_accel")
 lst_gyro = []
@@ -235,20 +255,16 @@ lst_rate.append("time,pitch_rate,roll_rate,yaw_rate")
 
 print("\n\nPROCESSING IMU PACKETS")
 
-
 # Read the file as a list of strings deliniated by newlines.
 imu_file = str(temp_path) + "/" + logs[4]
 strings = [line.rstrip('\n') for line in open(imu_file)]
 
-
-# # Extract position and rates from IMU
-print("Parsing IMU Packets...")
 bad_packets = 0
-total = 0
+total_packets = 0
 t_0 = 0
 
 for s in tqdm(strings):
-    total += 1
+    total_packets += 1
 
     if(validChecksum(s)):
         # Seperate into a list to parse
@@ -276,24 +292,14 @@ for s in tqdm(strings):
     else:
         bad_packets += 1
 
-percent_success = 100 * (1 - bad_packets / total)
 
+percent_success = 100 * (1 - bad_packets / total_packets)
 print("\RESULTS:")
-print("\t{} packets processed. ".format(total))
+print("\t{} packets processed. ".format(total_packets))
 print("\t{} of these were corrupted or not identified".format(bad_packets))
 print("\t{:3.2f}% packets sucessfully identified and processed".format(
     percent_success))
 
-# Save the parsed sentences
-
-
-def saveListToFile(lst, file, dest):
-    with open(file, "w") as f:
-        for line in lst:
-            f.write("%s\n" % line)
-    dest = dest / file
-    os.rename(file, str(dest))
-    print('\tSaved {0} --> {1}'.format(file, dest.relative_to(p)))
 
 # Save extracted lists to data files
 print("Extracting GPS, acceleration, euler angles and angular rates from parsed IMU packets.")
@@ -347,7 +353,7 @@ dest = temp_path / 'route_map.html'
 map_route.save(str(dest))
 print('Map saved to {}.'.format(dest.relative_to(p)))
 
-# # Create Plots using R
+# Create Plots using R
 if(graphing):
     rscript = p / "Plot_Ride_Data.R"
 
