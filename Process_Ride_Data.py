@@ -1,14 +1,14 @@
-import os
-import csv
-import pandas as pd
-import fnmatch
-import fileinput
-from pathlib import *
 from fuzzywuzzy import process
-import arrow
-import re
-import folium
+from pathlib import *
 from tqdm import tqdm
+import arrow
+import csv
+import fileinput
+import fnmatch
+import folium
+import os
+import pandas as pd
+import re
 import subprocess
 
 
@@ -172,8 +172,8 @@ now = str(now.format('MM.DD.YYYY@HH.mm'))
 # Directories
 p = Path('.').resolve()
 open_dir = '_Unprocessed_Data'
-save_dir = '_Processed_Data'
 temp_dir = '_temp'
+save_dir = '_Processed_Data'
 
 # Paths
 open_path = p / open_dir
@@ -241,15 +241,16 @@ Process the IMU/GPS File
 # List of data that will be separated into separate CSV files.
 lst_accel = []
 lst_accel.append("time,x_accel,y_accel,z_accel")
-lst_gyro = []
-lst_gyro.append("time,x_gyro,y_gyro,z_gyro")
-lst_mag = []
+lst_angle = []
+lst_angle.append("time,pitch_angle,roll_angle,yaw_angle")
 lst_gps = []
 lst_gps.append("time,lat,long")
 lst_gps_vel = []
 lst_gps_vel.append("time,vel_east,vel_west")
-lst_angle = []
-lst_angle.append("time,pitch_angle,roll_angle,yaw_angle")
+lst_gyro = []
+lst_gyro.append("time,x_gyro,y_gyro,z_gyro")
+lst_mag = []
+lst_mag.append("time,,x_magnetometer,y_magnetometer,z_magnetometer")
 lst_rate = []
 lst_rate.append("time,pitch_rate,roll_rate,yaw_rate")
 

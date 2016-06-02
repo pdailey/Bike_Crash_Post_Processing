@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
 # ClearWorkspace
-rm(list= ls())
+#rm(list= ls())
   
 # Control shift c to comment out a block of code
   
@@ -133,33 +133,6 @@ plot <- ggplot(data = m_angular_rates, aes( x = time, y = value, group = variabl
 plot = plot + scale_color_manual(values = c("#01665e", "#5ab4ac", "#2b8cbe", "#2b8cbe"))
 plot
 ggsave(plot, file = "Rates_Raw.png", width = 8, height = 6)
-
-########################################################################
-# GPS Velocity
-########################################################################
-df = read.csv("gps_vel.csv", header = T)
-df$vel = sqrt(df$vel_east^2 + df$vel_west^2) 
-
-plot <- ggplot(data = df, aes( x = time, y = df$vel)) +
-  geom_point() +
-  ggtitle("GPS Velocity") +
-  ylab(TeX('Velocity, m/s')) +
-  xlab(TeX('Time, s')) +
-  ylim(0, 50)
-# Set Colors
-plot = plot + scale_color_manual(values = c("#01665e"))
-plot
-ggsave(plot, file = "gps_velocity_raw.png", width = 8, height = 6)
-
-plot <- ggplot(data = df, aes( x = time, y = df$vel)) +  geom_smooth() +
-  ggtitle("GPS Velocity") +
-  ylab(TeX('Velocity, m/s')) +
-  xlab(TeX('Time, s')) +
-  ylim(0, 50)
-# Set Colors
-plot = plot + scale_color_manual(values = c("#01665e"))
-plot
-ggsave(plot, file = "gps_velocity_smooth.png", width = 8, height = 6)
 
 ########################################################################
 # front and rear brakes
