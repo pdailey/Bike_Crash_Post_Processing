@@ -142,7 +142,7 @@ def saveListToFile(lst, file, dest):
 User Defined Variables
 '''
 # Set true to graph the data using R
-graphing = False
+graphing = True
 
 # Set the the packet rates
 pkt_Hz = 20  # position packet update rate Hz
@@ -215,12 +215,14 @@ The BBB stores the time the testing started in calibration.csv. This
 time is not correct, at the BBB does not have an RTC installed
 currently. Instead, the times are converted to seconds since
 calibration, and converted from ms to s.
+
+In addition, empty lines and those containing too many/few values are removed.
 '''
 
 # get the start time from the calibration routine
 src = temp_path / logs[0]
 df = pd.read_csv(src, index_col=None)
-t_0 = df["Time Zero"][0]
+t_0 = float(df["Time"][0])
 print("Calibrating the time for the following files...")
 
 for log in logs:
@@ -228,11 +230,15 @@ for log in logs:
     # imu it is on an arduino with a an independent system time.
     if(log != "calibration.csv" and log != "imu.csv"):
         print("\t{}".format(log))
-        csv = temp_path / log
-        df = pd.read_csv(csv, index_col=None)
+        log = temp_path / log
+
+        # create a dataframe from the csv. Will skip blank lines by default.
+        df = pd.read_csv(log, index_col=None, skip_blank_lines=True, error_bad_lines=False)
+        # drop rows with empty fields
+        df = df.dropna()
         # get delta t, and convert from ms to s
         df["Time"] = (df["Time"] - t_0) / 1000
-        df.to_csv(str(csv), index_col=None)
+        df.to_csv(str(log), index_col=None)
 
 
 '''
@@ -373,7 +379,7 @@ if(graphing):
 
     # TODO - Set timeout?
     subprocess.run("./Plot_Ride_Data.R | R --vanilla | less",
-                   shell=True, check=True, timeout=120)
+                   shell=True, check=True, timeout=300)
     print("Plots saved to R_Plots.pdf")
 
 
