@@ -347,7 +347,13 @@ for index, row in tqdm(df.iterrows()):
         # add info above marker
         datum = "Time: " + str(df['time'][index]) + " sec"
         point = [df['lat'][index], df['long'][index]]
-        folium.Marker(point, popup=datum).add_to(map_route)
+
+        # Make start point a different color
+        if(index == 0):
+            folium.Marker(point, popup='Start', icon=folium.Icon(color='red',icon='info-sign')).add_to(map_route)
+        else:
+            folium.Marker(point, popup=datum).add_to(map_route)
+
 
 # Save the map as an HTML file
 dest = temp_path / 'route_map.html'
